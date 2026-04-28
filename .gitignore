@@ -1,0 +1,9 @@
+.claude/
+*.o
+*.mod
+*.exe
+*.obj
+*.frd
+*.dat
+*.cvg
+*.sta
