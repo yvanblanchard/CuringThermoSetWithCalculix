@@ -61,7 +61,8 @@ def run_ccx():
 
 
 def parse_dat():
-    """-> times [s], stress{eid: (n_t, 6)}, alpha{eid: (n_t,)}"""
+    """-> times [s], stress{eid: (n_t, 6)}, alpha{eid: (n_t,)},
+    temp{eid: (n_t,)} [K]"""
     stress, sdv = {}, {}
     hdr = re.compile(
         r"(stresses|internal state variables).*time\s+([\d.E+\-]+)", re.I)
@@ -92,13 +93,17 @@ def parse_dat():
                     d[t].setdefault(eid, []).append(
                         [float(v) for v in p[2:8]])
                 else:
-                    d[t].setdefault(eid, []).append(float(p[2]))  # SDV1 = alpha
+                    # SDV1 = alpha, SDV10 = temperature [K]
+                    d[t].setdefault(eid, []).append(
+                        [float(p[2]), float(p[11])])
     times = sorted(stress)
     S = {e: np.array([np.mean(stress[t].get(e, [[np.nan] * 6]), axis=0)
                       for t in times]) for e in OUTCOL}
-    A = {e: np.array([np.mean(sdv[t].get(e, [np.nan]))
-                      for t in times if t in sdv]) for e in OUTCOL}
-    return np.array(times), S, A
+    sv = {e: np.array([np.mean(sdv[t].get(e, [[np.nan] * 2]), axis=0)
+                       for t in times if t in sdv]) for e in OUTCOL}
+    A = {e: sv[e][:, 0] for e in OUTCOL}
+    TK = {e: sv[e][:, 1] for e in OUTCOL}
+    return np.array(times), S, A, TK
 
 
 def make_plot(times, S, A):
@@ -156,7 +161,7 @@ def main():
             print(f"[build] {dll.name} up to date? not checked -- reusing "
                   "existing DLL (pass --compile to force a rebuild)")
         run_ccx()
-    times, S, A = parse_dat()
+    times, S, A, _ = parse_dat()
     print(f"[dat] {len(times)} output frames, last t = {times[-1]:.0f} s")
     make_plot(times, S, A)
 
