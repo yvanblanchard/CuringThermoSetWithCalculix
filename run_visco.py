@@ -11,7 +11,8 @@ Steps:
      time against the digitized Abaqus reference curve.
 
 Usage:
-  python run_visco.py               # full pipeline
+  python run_visco.py               # solve + plot (compile only if DLL missing)
+  python run_visco.py --compile     # force recompiling libviscmod.dll
   python run_visco.py --plot-only   # skip DLL build + solve
 """
 import re
@@ -148,7 +149,12 @@ def make_plot(times, S, A):
 
 def main():
     if "--plot-only" not in sys.argv:
-        build_dll()
+        dll = HERE / "libviscmod.dll"
+        if "--compile" in sys.argv or not dll.exists():
+            build_dll()
+        else:
+            print(f"[build] {dll.name} up to date? not checked -- reusing "
+                  "existing DLL (pass --compile to force a rebuild)")
         run_ccx()
     times, S, A = parse_dat()
     print(f"[dat] {len(times)} output frames, last t = {times[-1]:.0f} s")
