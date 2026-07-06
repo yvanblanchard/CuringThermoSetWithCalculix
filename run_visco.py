@@ -67,7 +67,6 @@ def parse_dat():
     hdr = re.compile(
         r"(stresses|internal state variables).*time\s+([\d.E+\-]+)", re.I)
     mode, t = None, None
-    acc_s, acc_a = {}, {}
     with open(HERE / f"{JOB}.dat", encoding="latin-1") as f:
         for raw in f:
             line = raw.strip()
